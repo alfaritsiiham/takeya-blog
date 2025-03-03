@@ -8,78 +8,62 @@
     <div class="py-12">
         <div class="mx-auto max-w-7xl space-y-10 sm:px-6 lg:px-8">
 
-            {{-- for gueset users --}}
-            <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <p>Please <a href="{{ route('login') }}" class="text-blue-500">login</a> or
-                    <a href="{{ route('register') }}" class="text-blue-500">register</a>.</p>
+            @if(!Auth::check())
+                {{-- for gueset users --}}
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <p>Please <a href="{{ route('login') }}" class="text-blue-500">login</a> or
+                        <a href="{{ route('register') }}" class="text-blue-500">register</a>.</p>
+                    </div>
                 </div>
-            </div>
+            @else
+                {{-- for authenticated users --}}
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <div class="space-y-6 p-6">
+                        <h2 class="text-lg font-semibold">Your Posts</h2>
 
-            {{-- for authenticated users --}}
-            <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                <div class="space-y-6 p-6">
-                    <h2 class="text-lg font-semibold">Your Posts</h2>
-                    <div class="rounded-md border p-5 shadow">
-                        <div class="flex items-center gap-2">
-                            <span class="flex-none rounded bg-green-100 px-2 py-1 text-green-800">Active</span>
-                            <h3><a href="#" class="text-blue-500">Post title 1</a></h3>
-                        </div>
-                        <div class="mt-4 flex items-end justify-between">
-                            <div>
-                                <div>Published: 2024-10-01</div>
-                                <div>Updated: 2024-10-10</div>
+                        @foreach($posts as $val)
+                            <div class="rounded-md border p-5 shadow">
+                                <div class="flex items-center gap-2">
+
+                                    @if($val->status == App\Models\Post::STATUS_PUBLISHED)
+                                        <span class="flex-none rounded bg-green-100 px-2 py-1 text-green-800">{{ $val->status }}</span>
+                                    @elseif($val->status == App\Models\Post::STATUS_DRAFT)
+                                        <span class="flex-none rounded bg-gray-100 px-2 py-1 text-gray-800">{{ $val->status }}</span>
+                                    @elseif($val->status == App\Models\Post::STATUS_SCHEDULED)
+                                        <span class="flex-none rounded bg-yellow-100 px-2 py-1 text-yellow-800">{{ $val->status }}</span>
+                                    @endif
+
+                                    <h3><a href="{{ route('posts.show', $val->slug) }}" class="text-blue-500">{{ $val->title }}</a></h3>
+                                </div>
+                                <div class="mt-4 flex items-end justify-between">
+                                    <div>
+                                        @if($val->status == App\Models\Post::STATUS_SCHEDULED)
+                                            <div>Scheduled: {{ $val->publish_date }}</div>
+                                        @else
+                                            <div>Published: {{ $val->publish_date ?? '-' }}</div>
+                                        @endif
+                                        <div>Updated: {{ $val->updated_at }}</div>
+                                    </div>
+                                    <div>
+                                        <a href="{{ route('posts.show', $val->slug) }}" class="text-blue-500">Detail</a> /
+                                        <a href="{{ route('posts.edit', $val->slug) }}" class="text-blue-500">Edit</a> /
+                                        <form action="{{ route('posts.delete', $val->slug) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="text-red-500">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <a href="#" class="text-blue-500">Detail</a> /
-                                <a href="#" class="text-blue-500">Edit</a> /
-                                <form action="#" method="POST" class="inline">
-                                    <button class="text-red-500">Delete</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="rounded-md border p-5 shadow">
-                        <div class="flex items-center gap-2">
-                            <span class="flex-none rounded bg-gray-100 px-2 py-1 text-gray-800">Draft</span>
-                            <h3><a href="#" class="text-blue-500">Post title 2</a></h3>
-                        </div>
-                        <div class="mt-4 flex items-end justify-between">
-                            <div>
-                                <div>Published: -</div>
-                                <div>Updated: 2024-10-10</div>
-                            </div>
-                            <div>
-                                <a href="#" class="text-blue-500">Detail</a> /
-                                <a href="#" class="text-blue-500">Edit</a> /
-                                <form action="#" method="POST" class="inline">
-                                    <button class="text-red-500">Delete</button>
-                                </form>
-                            </div>
+                        @endforeach
+
+                        <div>
+                            {{ $posts->links() }}
                         </div>
                     </div>
-                    <div class="rounded-md border p-5 shadow">
-                        <div class="flex items-center gap-2">
-                            <span class="flex-none rounded bg-yellow-100 px-2 py-1 text-yellow-800">Scheduled</span>
-                            <h3><a href="#" class="text-blue-500">Post title 3</a></h3>
-                        </div>
-                        <div class="mt-4 flex items-end justify-between">
-                            <div>
-                                <div>Published: 2030-10-01</div>
-                                <div>Updated: 2024-10-10</div>
-                            </div>
-                            <div>
-                                <a href="#" class="text-blue-500">Detail</a> /
-                                <a href="#" class="text-blue-500">Edit</a> /
-                                <form action="#" method="POST" class="inline">
-                                    <button class="text-red-500">Delete</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <div>Pagination Here</div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 </x-app-layout>
