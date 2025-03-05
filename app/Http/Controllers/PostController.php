@@ -4,31 +4,54 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Gate;
 
 use App\Models\Post;
+use App\Http\Requests\PostRequest;
 
 class PostController extends Controller{
-    public function insertOrUpdate(Request $request){
-        $act = $request->act;
+    public function home(){
+        $posts = auth()->check()
+            ? Post::with('user')->where('author', auth()->id())->latest()->paginate(10)
+            : null;
 
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:60',
-            'content' => 'required',
-            'post_schedule' => 'required',
-            'published_at' => 'nullable|date'
-        ]);
+        return view('home', compact('posts'));
+    }
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+    public function index(){
+        $posts = Post::with('user')->where('status', Post::STATUS_PUBLISHED)->orderBy('publish_date', 'desc')->paginate(10);
+
+        return view('posts.index', compact('posts'));
+    }
+
+    public function show(Post $post){
+        return view('posts.show', compact('post'));
+    }
+
+    public function create(){
+        return view('posts.create', ['act' => 'insert']);
+    }
+
+    public function edit(Post $post) {
+        if (Gate::denies('update', $post)) {
+            abort(403);
         }
 
-        if($act == "insert"){
-            $post = new Post;
-        }else{
-            $post = Post::where('id', $request->id)->first();
+        return view('posts.edit', ['act' => 'edit', 'post' => $post]);
+    }
+
+    public function destroy(Post $post) {
+        if (Gate::denies('update', $post)) {
+            abort(403);
         }
+
+        $post->delete();
+
+        return redirect()->route('home');
+    }
+
+    public function insertOrUpdate(PostRequest $request){
+        $post = $request->act === 'insert' ? new Post : Post::findOrFail($request->id);
 
         if($request->post_schedule == 0){
             $status = Post::STATUS_DRAFT;
@@ -41,12 +64,13 @@ class PostController extends Controller{
             $published_at = now();
         }
 
-        $post->status = $status;
-        $post->title = $request->title;
-        $post->content = $request->content;
-        $post->author = auth()->user()->id;
-        $post->publish_date = $published_at;
-        $post->save();
+        $post->fill([
+            'status' => $status,
+            'title' => $request->title,
+            'content' => $request->content,
+            'author' => auth()->id(),
+            'publish_date' => $published_at,
+        ])->save();
 
         return redirect()->route('home');
     }

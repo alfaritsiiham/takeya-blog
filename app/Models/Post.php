@@ -15,6 +15,8 @@ class Post extends Model{
     const STATUS_SCHEDULED = "Scheduled";
     const STATUS_PUBLISHED = "Published";
 
+    protected $fillable = ['title', 'content', 'author', 'publish_date', 'status'];
+
     protected $casts = [
         'publish_date' => 'datetime',
     ];

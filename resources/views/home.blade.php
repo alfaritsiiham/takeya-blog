@@ -51,7 +51,7 @@
                                         <div>
                                             <a href="{{ route('posts.show', $val->slug) }}" class="text-blue-500">Detail</a> /
                                             <a href="{{ route('posts.edit', $val->slug) }}" class="text-blue-500">Edit</a> /
-                                            <form action="{{ route('posts.delete', $val->slug) }}" method="POST" class="inline">
+                                            <form action="{{ route('posts.destroy', $val->slug) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="text-red-500">Delete</button>
